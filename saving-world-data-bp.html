@@ -32,17 +32,16 @@
             <p>This guide is for Blueprints. For a C++ approach, <a href="saving-world-data-cpp.html">see the C++ guide</a>.</p>
         </div>
 
-        <h2>Step 1: Create Your Actor Data Object (Optional)</h2>
-        <p>The manager stores a <code>UObject*</code> payload for each actor. It's good practice to create a simple <code>UObject</code> Blueprint to hold this data.</p>
+        <h2>Step 1: Create Your Actor Data Struct (Optional)</h2>
+        <p>The manager stores an <code>FInstancedStruct</code> payload for each actor. It's good practice to create a simple <strong>Struct</strong> Blueprint to hold this data.</p>
         <ol>
-            <li>Right-click in the Content Browser -> <strong>Blueprint Class</strong>.</li>
-            <li>Select <strong>Object</strong> as the parent class.</li>
-            <li>Name it <code>BP_ChestData</code>.</li>
-            <li>Open it and add a variable <code>bHasBeenOpened</code> of type Boolean.</li>
+            <li>Right-click in the Content Browser -> <strong>Blueprints</strong> -> <strong>Structure</strong>.</li>
+            <li>Name it <code>Struct_WorldActorData</code>.</li>
+            <li>Open it and add a variable <code>Scale</code> of type Vector.</li>
         </ol>
         
         <h2>Step 2: Implement the Interface</h2>
-        <p>In your Actor Blueprint (e.g., <code>BP_SaveableChest</code>), add the <code>ICrimsonSaveableActor</code> interface.</p>
+        <p>In your Actor Blueprint (e.g., <code>SaveGame_WorldActor</code>), add the <code>ICrimsonSaveableActor</code> interface.</p>
         <ol>
             <li>Go to <strong>Class Settings</strong> in the toolbar.</li>
             <li>In the Details panel, find the "Interfaces" section.</li>
@@ -51,7 +50,7 @@
             <li>Click the "eye" icon to make it <strong>Instance Editable</strong>.</li>
         </ol>
         <div class="note">
-            <p><strong>CRITICAL:</strong> After placing <code>BP_SaveableChest</code> in your level, you <strong>must</strong> select it, go to the Details panel, and click the "Generate new GUID" button next to your <code>SaveID</code> variable. Each instance *must* have a unique ID.</p>
+            <p><strong>CRITICAL:</strong> After placing <code>SaveGame_WorldActor</code> in your level, you <strong>must</strong> select it, go to the Details panel, and click the "Generate new GUID" button next to your <code>SaveID</code> variable. Each instance *must* have a unique ID.</p>
         </div>
 
         <h2>Step 3: Implement Interface Functions</h2>
@@ -59,31 +58,30 @@
 
         <h3>GetSaveID</h3>
         <p>Double-click this function. Drag in your <code>SaveID</code> variable and connect it to the <code>Return Value</code>.</p>
-        <img src="assets/get-save-id.png" alt="Get SaveID" style="width: 100%;">
+        <img src="assets/get-save-id.png" alt="Get SaveID function returning the SaveID variable" style="width: 100%;">
 
         <h3>RestoreFromSaveData</h3>
-        <p>This function applies the saved data to your actor.</p>
+        <p>This function applies the saved data to your actor. The <code>Actor Data</code> input is now an <code>Instanced Struct</code>.</p>
         <ol>
-            <li>Drag off the <code>Actor Data</code> input pin and <code>Cast To BP_ChestData</code>.</li>
-            <li>If the cast succeeds, get the <code>bHasBeenOpened</code> variable from the <code>BP_ChestData</code>.</li>
-            <li>Set your actor's live variable (e.g., <code>bIsOpen</code>) with this saved value.</li>
-            <li>Call any events needed to visually update the chest (e.g., play the "open" animation).</li>
+            <li>Drag off the <code>Actor Data</code> input pin and use the <strong>Get Instanced Struct Value</strong> node.</li>
+            <li>Drag from the <code>Value</code> on this node and break it into its correct type, in this case <code>Struct_WorldActorData</code>.</li>
+            <li>Set your actor's live variable (e.g., <code>Scale</code>) with this saved value.</li>
+            <li>Call any events needed to visually update the actor (e.g., play the "scaling" animation).</li>
         </ol>
-        <img src="assets/restore-from-save-data.png" alt="Restore From Save Data" style="width: 100%;">
+        <img src="assets/restore-from-save-data.png" alt="Restore From Save Data using Get Struct Data node" style="width: 100%;">
 
         <h2>Step 4: Notify the Manager of Changes</h2>
         <p>Your actor *must* tell the <code>WorldManager</code> when its state changes. The manager doesn't poll; it relies on notifications.</p>
         <p>In your <code>OnInteract</code> or similar event:</p>
         <ol>
             <li>Get the <code>CrimsonSaveWorldManagerSubsystem</code>.</li>
-            <li><code>Create Object from Class</code> -> <code>BP_ChestData</code>.</li>
-            <li>Set the <code>bHasBeenOpened</code> on the new object to <code>true</code>.</li>
-            <li>Call <code>OnActorStateChanged</code> on the subsystem. Pass <code>self</code> for "In Actor" and the new <code>BP_ChestData</code> object for "New Actor State Object".</li>
+            <li>Use the <strong>Make Instanced Struct</strong> node. Set <code>Value</code> by making a  <code>Struct_WorldActorData</code> and setting is current <code>scale</code> value.</li>
+            <li>Call <code>OnActorStateChanged</code> on the subsystem. Pass <code>self</code> for "In Actor" and the return value from <strong>Make Instanced Struct</strong> for "Actor Data".</li>
         </ol>
-        <img src="assets/notify-world-manager.png" alt="Notify World Manager" style="width: 100%;">
+        <img src="assets/notify-world-manager.png" alt="Notify World Manager using Make Instanced Struct" style="width: 100%;">
 
-        <p>If your actor is destroyed, call <code>OnActorDestroyed</code> instead, passing <code>self</code>.</p>
-        <img src="assets/on-actor-destroyed.png" alt="On Actor Destroyed" style="width: 100%;">
+        <p>If your actor is destroyed, call <code>OnActorDestroyed</code> instead, passing <code>self</code> and an optional <code>Instanced Struct</code> for any final state.</p>
+        <img src="assets/on-actor-destroyed.png" alt="On Actor Destroyed node" style="width: 100%;">
 
         <div class="navigation-buttons">
             <a href="saving-world-data-cpp.html" class="nav-button">← Saving World Data (C++)</a>
