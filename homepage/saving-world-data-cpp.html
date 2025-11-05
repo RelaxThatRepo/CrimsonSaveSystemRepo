@@ -31,19 +31,19 @@
             <p>This guide is for C++ programmers. For a Blueprint-only approach, <a href="saving-world-data-bp.html">see the Blueprint guide</a>.</p>
         </div>
 
-        <h2>Step 1: Create Your Actor Data Object (Optional)</h2>
-        <p>The manager stores a <code>UObject*</code> payload for each actor. It's good practice to create a simple <code>UObject</code> class to hold this data.</p>
+        <h2>Step 1: Create Your Actor Data Struct (Optional)</h2>
+        <p>The manager stores an <code>FInstancedStruct</code> payload for each actor. It's good practice to create a simple <code>USTRUCT</code> to hold this data.</p>
 <pre><code>// MySaveableChestData.h
 #pragma once
 #include "MySaveableChestData.generated.h"
 
-UCLASS()
-class UMySaveableChestData : public UObject
+USTRUCT(BlueprintType)
+struct FMySaveableChestData
 {
     GENERATED_BODY()
 public:
     UPROPERTY()
-    bool bHasBeenOpened;
+    bool bHasBeenOpened = false;
 };
 </code></pre>
         
@@ -52,6 +52,7 @@ public:
 <pre><code>// MySaveableChest.h
 #pragma once
 #include "ICrimsonSaveableActor.h"
+#include "StructUtils/InstancedStruct.h"
 #include "MySaveableChest.generated.h"
 
 UCLASS()
@@ -63,7 +64,7 @@ public:
     // --- ICrimsonSaveableActor Interface ---
     virtual FGuid GetSaveID_Implementation() const override;
     virtual void ResetToDefaultState_Implementation() override;
-    virtual void RestoreFromSaveData_Implementation(UObject* ActorData) override;
+    virtual void RestoreFromSaveData_Implementation(const FInstancedStruct& ActorData) override;
     // --- End Interface ---
     
     // The actor's live property
@@ -89,9 +90,9 @@ FGuid AMySaveableChest::GetSaveID_Implementation() const
     return SaveID;
 }
 
-void AMySaveableChest::RestoreFromSaveData_Implementation(UObject* ActorData)
+void AMySaveableChest::RestoreFromSaveData_Implementation(const FInstancedStruct& ActorData)
 {
-    if (UMySaveableChestData* ChestData = Cast&lt;UMySaveableChestData&gt;(ActorData))
+    if (const FMySaveableChestData* ChestData = ActorData.GetPtr&lt;FMySaveableChestData&gt;())
     {
         this->bIsOpen = ChestData->bHasBeenOpened;
         
@@ -106,6 +107,7 @@ void AMySaveableChest::RestoreFromSaveData_Implementation(UObject* ActorData)
 <pre><code>// MySaveableChest.cpp
 #include "CrimsonSaveWorldManagerSubsystem.h"
 #include "MySaveableChestData.h"
+#include "StructUtils/InstancedStruct.h"
 
 void AMySaveableChest::OnInteract_OpenChest()
 {
@@ -117,26 +119,27 @@ void AMySaveableChest::OnInteract_OpenChest()
     // --- NOTIFY THE SAVE SYSTEM ---
     if (UCrimsonSaveWorldManagerSubsystem* WorldSaveManager = GetWorld()->GetSubsystem&lt;UCrimsonSaveWorldManagerSubsystem&gt;())
     {
-        // Create the payload object
-        UMySaveableChestData* ChestData = NewObject&lt;UMySaveableChestData&gt;();
-        ChestData->bHasBeenOpened = true;
+        // Create the payload struct
+        FMySaveableChestData ChestData;
+        ChestData.bHasBeenOpened = true;
         
-        // Send the new state to the manager
-        WorldSaveManager->OnActorStateChanged(this, ChestData);
+        // Send the new state to the manager, wrapped in an FInstancedStruct
+        WorldSaveManager->OnActorStateChanged(this, FInstancedStruct::Make(ChestData));
     }
 }
 </code></pre>
         <p>If your actor is permanently destroyed (like a breakable wall), you should call <code>OnActorDestroyed</code> instead.</p>
 <pre><code>// MyBreakableWall.cpp
 #include "CrimsonSaveWorldManagerSubsystem.h"
+#include "StructUtils/InstancedStruct.h"
 
 void AMyBreakableWall::OnTakeDamage_Destroy()
 {
     // --- NOTIFY THE SAVE SYSTEM ---
     if (UCrimsonSaveWorldManagerSubsystem* WorldSaveManager = GetWorld()->GetSubsystem&lt;UCrimsonSaveWorldManagerSubsystem&gt;())
     {
-        // Pass 'nullptr' as the payload, we just care that it's destroyed
-        WorldSaveManager->OnActorDestroyed(this, nullptr);
+        // Pass an empty FInstancedStruct, we just care that it's destroyed
+        WorldSaveManager->OnActorDestroyed(this, FInstancedStruct());
     }
     
     // ... (spawn effects, etc.)
