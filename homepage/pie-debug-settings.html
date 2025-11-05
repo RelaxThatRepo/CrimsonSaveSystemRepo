@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIE & Debug Settings - Crimson Save System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; line-height: 1.7; padding: 2em; margin: 0 auto; background-color: #121212; color: #e0e0e0; }
+        .container { max-width: 900px; margin: 0 auto; background-color: #1e1e1e; padding: 2em 3em; border-radius: 12px; border: 1px solid #333; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+        h1 { color: #DC143C; font-weight: 700; }
+        h2 { color: #f5f5f5; font-weight: 400; border-bottom: 1px solid #5e0a1b; padding-bottom: 0.5em; margin-top: 2em; }
+        p { color: #b3b3b3; }
+        .breadcrumb { margin-bottom: 2em; font-size: 0.9em; }
+        .breadcrumb a { color: #DC143C; font-weight: bold; }
+        code { background-color: #2c2c2c; padding: 0.2em 0.4em; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+        li { margin-bottom: 0.5em; }
+        .note { background-color: #2c2c2c; border-left: 4px solid #DC143C; padding: 1em; margin: 1em 0; border-radius: 4px; }
+        .navigation-buttons { display: flex; justify-content: space-between; margin-top: 3em; border-top: 1px solid #333; padding-top: 1.5em; }
+        .nav-button { display: inline-block; padding: 10px 20px; background-color: #333; color: #e0e0e0; border-radius: 6px; text-decoration: none; font-weight: bold; border: 1px solid #444; transition: all 0.3s ease; }
+        .nav-button:hover { background-color: #DC143C; border-color: #DC143C; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="breadcrumb"><a href="index.html">← Back to Home</a></p>
+        <h1>PIE & Debug Settings</h1>
+        <p>The system's debugging and Play-In-Editor (PIE) behavior is controlled by <code>UCrimsonSaveGameManagerDeveloperSettings</code>. You can find these settings in your project's <strong>Project Settings > Game > Crimson Save Game Manager</strong>.</p>
+
+        <h2>Player Manager (PIE) Settings</h2>
+        <p>These settings control the <code>UCrimsonSaveGameManagerSubsystem</code> (GameInstance) during PIE sessions.</p>
+        <ul>
+            <li>
+                <strong><code>Default PIE Save Slot</code>:</strong>
+                The save slot index (e.g., 0) to automatically load or create when you start a PIE session.
+            </li>
+            <li>
+                <strong><code>Default PIE Character Name</code>:</strong>
+                The character name used (e.g., "Play In Editor Character") if a new debug save file needs to be created.
+            </li>
+            <li>
+                <strong><code>Reset PIE Save Slot On Start</code>:</strong>
+                If true, the <code>DefaultPIESaveSlot</code> will be completely deleted and reset every time you press "Play". This is perfect for testing your "New Game" flow repeatedly.
+            </li>
+            <li>
+                <strong><code>Main Menu Map</code>:</strong>
+                This is a crucial setting. If you set your project's main menu map here, the subsystem will *bypass* all the PIE debug logic if it detects it's loading that map. This allows you to start PIE in your main menu and test the save/load system as a real player would.
+            </li>
+        </ul>
+
+        <h2>World Manager Settings</h2>
+        <p>These settings control the <code>UCrimsonSaveWorldManagerSubsystem</code> (World).</p>
+        <ul>
+            <li>
+                <strong><code>Auto Load World State</code>:</strong>
+                If true, the world subsystem will automatically call <code>LoadWorldState()</code> during its <code>OnWorldBeginPlay</code> event. This is the recommended setting for most games. If false, you must call <code>LoadWorldState()</code> manually.
+            </li>
+            <li>
+                <strong><code>Save World State After Every Change</code>:</strong>
+                If true, the world subsystem will call <code>SaveWorldState()</code> *every single time* an actor calls <code>OnActorStateChanged</code> or <code>OnActorDestroyed</code>.
+            </li>
+        </ul>
+        <div class="note">
+            <p><strong>Performance Warning:</strong> <code>bSaveWorldStateAfterEveryChange</code> is excellent for debugging to ensure your actors are saving correctly, but it can cause significant performance hits and disk I/O. It is <strong>strongly recommended</strong> to disable this in a packaged build.</p>
+        </div>
+
+        <div class="navigation-buttons">
+            <a href="using-the-manager.html" class="nav-button">← Using the Manager</a>
+            <a href="index.html" class="nav-button">Back to Home →</a>
+        </div>
+    </div>
+</body>
+</html>

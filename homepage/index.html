@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-Fi8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crimson Save System - Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            padding: 2em;
+            margin: 0 auto;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #1e1e1e;
+            padding: 2em 3em;
+            border-radius: 12px;
+            border: 1px solid #333;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #DC143C;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(220, 20, 60, 0.4);
+            border-bottom: none;
+            padding-bottom: 0;
+            margin-bottom: 0.5em;
+        }
+        h2 {
+            color: #f5f5f5;
+            font-weight: 400;
+            border-bottom: 1px solid #5e0a1b;
+            padding-bottom: 0.5em;
+            margin-top: 2em;
+        }
+        p { color: #b3b3b3; }
+        a {
+            color: #20c2c2;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        a:hover { color: #50e0e0; }
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 4.5em 1.5em; 
+            padding: 1.5em 0;
+            list-style: none;
+            margin-left: 0;
+            padding-left: 0;
+        }
+        .topic-card {
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            padding: 1.5em;
+            border: 2px solid #333;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(220, 20, 60, 0.3);
+            border-color: #DC143C;
+        }
+        .topic-card h3 {
+            margin-top: 0;
+            color: #f5f5f5;
+        }
+        .topic-card p {
+            font-size: 0.9em;
+            color: #b3b3b3;
+            flex-grow: 1;
+        }
+        .topic-card a {
+            color: #DC143C;
+            font-weight: bold;
+            text-decoration: none;
+            margin-top: auto;
+        }
+        .topic-card a::after {
+            content: ' →';
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Crimson Save System</h1>
+        <p>Welcome to the documentation for the Crimson Save System, a modular, fragment-based save solution for Unreal Engine 5. This system is designed to be highly decoupled, allowing any number of game systems to register themselves as "saveable" without creating hard dependencies.</p>
+        <p>It intelligently separates persistent player data (like inventory and skills) from level-specific world data (like open chests or destroyed objects).</p>
+
+        <h2>Documentation Topics</h2>
+        <p>Select a topic below to view detailed guides.</p>
+        
+        <ul class="topic-grid">
+            <li>
+                <div class="topic-card">
+                    <h3>Core Concepts & Setup</h3>
+                    <p>Start here. Learn the two-subsystem design and the fragment-based philosophy.</p>
+                    <a href="core-concepts.html">View Guide</a>
+                </div>
+            </li>
+            <li>
+                <div class="topic-card">
+                    <h3>Saving Player Data (C++)</h3>
+                    <p>The C++ implementation for making player-centric systems (inventory, skills) saveable using <code>ICrimsonSaveableSystem</code>.</p>
+                    <a href="saving-player-data-cpp.html">View Guide</a>
+                </div>
+            </li>
+             <li>
+                <div class="topic-card">
+                    <h3>Saving Player Data (BP)</h3>
+                    <p>The Blueprint-only implementation for making player-centric systems saveable using <code>ICrimsonSaveableSystem</code>.</p>
+                    <a href="saving-player-data-bp.html">View Guide</a>
+                </div>
+            </li>
+            <li>
+                <div class="topic-card">
+                    <h3>Saving World Data (C++)</h3>
+                    <p>The C++ implementation for saving the state of actors in your level (chests, doors) using <code>ICrimsonSaveableActor</code>.</p>
+                    <a href="saving-world-data-cpp.html">View Guide</a>
+                </div>
+            </li>
+            <li>
+                <div class="topic-card">
+                    <h3>Saving World Data (BP)</h3>
+                    <p>The Blueprint-only implementation for saving the state of actors in your level using <code>ICrimsonSaveableActor</code>.</p>
+                    <a href="saving-world-data-bp.html">View Guide</a>
+                </div>
+            </li>
+            <li>
+                <div class="topic-card">
+                    <h3>Using the Save Manager</h3>
+                    <p>See how to call the manager from gameplay to create, load, save, and delete save slots from your UI.</p>
+                    <a href="using-the-manager.html">View Guide</a>
+                </div>
+            </li>
+            <li>
+                <div class="topic-card">
+                    <h3>PIE & Debug Settings</h3>
+                    <p>Configure the developer settings to streamline your Play-In-Editor (PIE) testing and debugging workflow.</p>
+                    <a href="pie-debug-settings.html">View Guide</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>

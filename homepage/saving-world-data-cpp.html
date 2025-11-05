@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saving World Data (C++) - Crimson Save System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; line-height: 1.7; padding: 2em; margin: 0 auto; background-color: #121212; color: #e0e0e0; }
+        .container { max-width: 900px; margin: 0 auto; background-color: #1e1e1e; padding: 2em 3em; border-radius: 12px; border: 1px solid #333; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+        h1 { color: #DC143C; font-weight: 700; }
+        h2 { color: #f5f5f5; font-weight: 400; border-bottom: 1px solid #5e0a1b; padding-bottom: 0.5em; margin-top: 2em; }
+        p { color: #b3b3b3; }
+        .breadcrumb { margin-bottom: 2em; font-size: 0.9em; }
+        .breadcrumb a { color: #DC143C; font-weight: bold; }
+        code { background-color: #2c2c2c; padding: 0.2em 0.4em; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+        pre { background-color: #2c2c2c; padding: 1em; border-radius: 8px; overflow-x: auto; }
+        li { margin-bottom: 0.5em; }
+        .note { background-color: #2c2c2c; border-left: 4px solid #DC143C; padding: 1em; margin: 1em 0; border-radius: 4px; }
+        .navigation-buttons { display: flex; justify-content: space-between; margin-top: 3em; border-top: 1px solid #333; padding-top: 1.5em; }
+        .nav-button { display: inline-block; padding: 10px 20px; background-color: #333; color: #e0e0e0; border-radius: 6px; text-decoration: none; font-weight: bold; border: 1px solid #444; transition: all 0.3s ease; }
+        .nav-button:hover { background-color: #DC143C; border-color: #DC143C; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="breadcrumb"><a href="index.html">← Back to Home</a></p>
+        <h1>Saving World Data (C++)</h1>
+        <p>This guide covers the C++ implementation for saving the state of Actors placed in your level (chests, doors, etc.). This process uses the <code>ICrimsonSaveableActor</code> interface.</p>
+        <div class="note">
+            <p>This guide is for C++ programmers. For a Blueprint-only approach, <a href="saving-world-data-bp.html">see the Blueprint guide</a>.</p>
+        </div>
+
+        <h2>Step 1: Create Your Actor Data Object (Optional)</h2>
+        <p>The manager stores a <code>UObject*</code> payload for each actor. It's good practice to create a simple <code>UObject</code> class to hold this data.</p>
+<pre><code>// MySaveableChestData.h
+#pragma once
+#include "MySaveableChestData.generated.h"
+
+UCLASS()
+class UMySaveableChestData : public UObject
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY()
+    bool bHasBeenOpened;
+};
+</code></pre>
+        
+        <h2>Step 2: Implement the Interface</h2>
+        <p>In your Actor class (e.g., <code>AMySaveableChest</code>), add the <code>ICrimsonSaveableActor</code> interface.</p>
+<pre><code>// MySaveableChest.h
+#pragma once
+#include "ICrimsonSaveableActor.h"
+#include "MySaveableChest.generated.h"
+
+UCLASS()
+class AMySaveableChest : public AActor, public ICrimsonSaveableActor
+{
+    GENERATED_BODY()
+    
+public:
+    // --- ICrimsonSaveableActor Interface ---
+    virtual FGuid GetSaveID_Implementation() const override;
+    virtual void ResetToDefaultState_Implementation() override;
+    virtual void RestoreFromSaveData_Implementation(UObject* ActorData) override;
+    // --- End Interface ---
+    
+    // The actor's live property
+    UPROPERTY(VisibleAnywhere, Replicated)
+    bool bIsOpen = false;
+
+    // The actor's unique ID for saving
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Save System")
+    FGuid SaveID;
+};
+</code></pre>
+
+        <h2>Step 3: Implement Interface Functions</h2>
+        <p>In your <code>.cpp</code> file, provide logic for the interface functions.</p>
+        <div class="note">
+            <p><strong>CRITICAL:</strong> The <code>FGuid SaveID</code> <strong>must be unique</strong> for every saveable actor *in the level*.</p>
+        </div>
+<pre><code>// MySaveableChest.cpp
+#include "MySaveableChestData.h"
+
+FGuid AMySaveableChest::GetSaveID_Implementation() const
+{
+    return SaveID;
+}
+
+void AMySaveableChest::RestoreFromSaveData_Implementation(UObject* ActorData)
+{
+    if (UMySaveableChestData* ChestData = Cast&lt;UMySaveableChestData&gt;(ActorData))
+    {
+        this->bIsOpen = ChestData->bHasBeenOpened;
+        
+        // ... (update mesh, disable interaction, etc.)
+    }
+   
+}
+</code></pre>
+
+        <h2>Step 4: Notify the Manager of Changes</h2>
+        <p>Your actor *must* tell the <code>WorldManager</code> when its state changes. The manager doesn't poll; it relies on notifications.</p>
+<pre><code>// MySaveableChest.cpp
+#include "CrimsonSaveWorldManagerSubsystem.h"
+#include "MySaveableChestData.h"
+
+void AMySaveableChest::OnInteract_OpenChest()
+{
+    if (bIsOpen) return; // Already open
+    
+    bIsOpen = true;
+    // ... (play animation, spawn loot)
+
+    // --- NOTIFY THE SAVE SYSTEM ---
+    if (UCrimsonSaveWorldManagerSubsystem* WorldSaveManager = GetWorld()->GetSubsystem&lt;UCrimsonSaveWorldManagerSubsystem&gt;())
+    {
+        // Create the payload object
+        UMySaveableChestData* ChestData = NewObject&lt;UMySaveableChestData&gt;();
+        ChestData->bHasBeenOpened = true;
+        
+        // Send the new state to the manager
+        WorldSaveManager->OnActorStateChanged(this, ChestData);
+    }
+}
+</code></pre>
+        <p>If your actor is permanently destroyed (like a breakable wall), you should call <code>OnActorDestroyed</code> instead.</p>
+<pre><code>// MyBreakableWall.cpp
+#include "CrimsonSaveWorldManagerSubsystem.h"
+
+void AMyBreakableWall::OnTakeDamage_Destroy()
+{
+    // --- NOTIFY THE SAVE SYSTEM ---
+    if (UCrimsonSaveWorldManagerSubsystem* WorldSaveManager = GetWorld()->GetSubsystem&lt;UCrimsonSaveWorldManagerSubsystem&gt;())
+    {
+        // Pass 'nullptr' as the payload, we just care that it's destroyed
+        WorldSaveManager->OnActorDestroyed(this, nullptr);
+    }
+    
+    // ... (spawn effects, etc.)
+    Destroy();
+}
+</code></pre>
+
+        <div class="navigation-buttons">
+            <a href="saving-player-data-bp.html" class="nav-button">← Saving Player Data (BP)</a>
+            <a href="saving-world-data-bp.html" class="nav-button">Saving World Data (BP) →</a>
+        </div>
+    </div>
+</body>
+</html>

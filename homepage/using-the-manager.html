@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Using the Manager - Crimson Save System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; line-height: 1.7; padding: 2em; margin: 0 auto; background-color: #121212; color: #e0e0e0; }
+        .container { max-width: 900px; margin: 0 auto; background-color: #1e1e1e; padding: 2em 3em; border-radius: 12px; border: 1px solid #333; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+        h1 { color: #DC143C; font-weight: 700; }
+        h2 { color: #f5f5f5; font-weight: 400; border-bottom: 1px solid #5e0a1b; padding-bottom: 0.5em; margin-top: 2em; }
+        p { color: #b3b3b3; }
+        .breadcrumb { margin-bottom: 2em; font-size: 0.9em; }
+        .breadcrumb a { color: #DC143C; font-weight: bold; }
+        code { background-color: #2c2c2c; padding: 0.2em 0.4em; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+        pre { background-color: #2c2c2c; padding: 1em; border-radius: 8px; overflow-x: auto; }
+        li { margin-bottom: 0.5em; }
+        .note { background-color: #2c2c2c; border-left: 4px solid #DC143C; padding: 1em; margin: 1em 0; border-radius: 4px; }
+        .navigation-buttons { display: flex; justify-content: space-between; margin-top: 3em; border-top: 1px solid #333; padding-top: 1.5em; }
+        .nav-button { display: inline-block; padding: 10px 20px; background-color: #333; color: #e0e0e0; border-radius: 6px; text-decoration: none; font-weight: bold; border: 1px solid #444; transition: all 0.3s ease; }
+        .nav-button:hover { background-color: #DC143C; border-color: #DC143C; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="breadcrumb"><a href="index.html">← Back to Home</a></p>
+        <h1>Using the Save Manager (Gameplay)</h1>
+        <p>This guide explains how to call the <code>UCrimsonSaveGameManagerSubsystem</code> from your UI widgets or game logic to perform common save/load operations. All operations are asynchronous and non-blocking.</p>
+
+        <h2>Accessing the Manager</h2>
+        <p>The easiest way to get the manager is with its static <code>Get()</code> function, available in both C++ and Blueprints.</p>
+<pre><code>// In C++
+#include "Core/CrimsonSaveGameManagerSubsystem.h"
+
+UCrimsonSaveGameManagerSubsystem* SaveManager = UCrimsonSaveGameManagerSubsystem::Get(this);
+if (SaveManager)
+{
+    // ...
+}
+</code></pre>
+        <p>In Blueprints, just use the <code>Get Crimson Save Game Manager Subsystem</code> node.</p>
+
+        <h2>Core Gameplay Flow</h2>
+        <ul>
+            <li>
+                <strong>Creating a New Game:</strong>
+                Call <code>RequestNewGameSave(SlotIndex, CharacterName)</code>. This creates a new save slot directory, creates a <code>Header.sav</code> file, and triggers a full save of all currently registered <code>ICrimsonSaveableSystem</code>s.
+            </li>
+            <li>
+                <strong>Loading a Game:</strong>
+                Call <code>RequestLoadFromSlot(SlotIndex)</code>. This will set the active slot, clear all old data, and begin the asynchronous loading process for all fragments in that slot's directory. You can bind to the <code>OnLoadComplete</code> event to know when it's finished.
+            </li>
+            <li>
+                <strong>Saving Progress (Checkpoint/Manual Save):</strong>
+                Call <code>RequestSaveProgress()</code>. This saves the data from *all* registered systems to the *currently active* save slot. It also updates the header file with the new playtime and timestamp.
+            </li>
+            <li>
+                <strong>Deleting a Save:</strong>
+                Call <code>RequestDeleteSlot(SlotIndex)</code>. This permanently deletes the entire <code>Slot_X</code> directory. If this was the active slot, it also clears the in-memory data.
+            </li>
+        </ul>
+
+        <h2>Building a "Load Game" Menu</h2>
+        <p>To populate your "Load Game" UI, you don't need to load any save games. You just need to load the headers.</p>
+        <ol>
+            <li>Call <code>GetAllSaveSlotHeaders()</code>.</li>
+            <li>This function scans the <code>SaveGames/</code> directory for all <code>Slot_*/Header.sav</code> files and loads them.</li>
+            <li>It returns a <code>TArray&lt;UCrimsonSaveGameHeader*&gt;</code>.</li>
+            <li>Loop through this array in your UI. For each header, you can get the <code>SlotName</code>, <code>SaveDateTime</code>, and <code>PlayTime</code> to display in your list.</li>
+        </ol>
+
+        <h2>Optimization: High-Frequency Saving</h2>
+        <p>Calling <code>RequestSaveProgress()</code> saves *everything* (inventory, skills, stats, etc.). This is great for checkpoints, but bad for frequent auto-saves (like picking up an item).</p>
+        <p>For this, use <code>RequestSaveSpecificFragment(SystemToSave)</code>.</p>
+        <div class="note">
+            <p><strong>Example:</strong> After your inventory component adds an item, it can get the Save Manager and call <code>RequestSaveSpecificFragment(this)</code>. This will *only* save the inventory fragment and nothing else, which is extremely fast. It still updates the main header's timestamp.</p>
+        </div>
+        
+        <h2>Managing User Settings</h2>
+        <p>The manager also saves a separate file for user preferences, independent of save slots (<code>CrimsonSaveGamePluginSettings.sav</code>).</p>
+        <ul>
+            <li><strong><code>GetLastSelectedSaveSlot()</code>:</strong> Use this to remember which slot the player had highlighted in the menu.</li>
+            <li><strong><code>SetLastSelectedSaveSlot(SlotIndex)</code>:</strong> Call this when the player clicks on a slot.</li>
+            <li><strong><code>ShouldAutoLoadLastSave()</code> / <code>SetShouldAutoLoadLastSave(bEnabled)</code>:</strong> Use these to power a "Auto-Load Last Save" checkbox in your options menu.</li>
+        </ul>
+
+        <div class="navigation-buttons">
+            <a href="saving-world-data.html" class="nav-button">← Saving World Data</a>
+            <a href="pie-debug-settings.html" class="nav-button">PIE & Debug Settings →</a>
+        </div>
+    </div>
+</body>
+</html>

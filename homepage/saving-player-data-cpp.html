@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saving Player Data (C++) - Crimson Save System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; line-height: 1.7; padding: 2em; margin: 0 auto; background-color: #121212; color: #e0e0e0; }
+        .container { max-width: 900px; margin: 0 auto; background-color: #1e1e1e; padding: 2em 3em; border-radius: 12px; border: 1px solid #333; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+        h1 { color: #DC143C; font-weight: 700; }
+        h2 { color: #f5f5f5; font-weight: 400; border-bottom: 1px solid #5e0a1b; padding-bottom: 0.5em; margin-top: 2em; }
+        p { color: #b3b3b3; }
+        .breadcrumb { margin-bottom: 2em; font-size: 0.9em; }
+        .breadcrumb a { color: #DC143C; font-weight: bold; }
+        code { background-color: #2c2c2c; padding: 0.2em 0.4em; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+        pre { background-color: #2c2c2c; padding: 1em; border-radius: 8px; overflow-x: auto; }
+        li { margin-bottom: 0.5em; }
+        .note { background-color: #2c2c2c; border-left: 4px solid #DC143C; padding: 1em; margin: 1em 0; border-radius: 4px; }
+        .navigation-buttons { display: flex; justify-content: space-between; margin-top: 3em; border-top: 1px solid #333; padding-top: 1.5em; }
+        .nav-button { display: inline-block; padding: 10px 20px; background-color: #333; color: #e0e0e0; border-radius: 6px; text-decoration: none; font-weight: bold; border: 1px solid #444; transition: all 0.3s ease; }
+        .nav-button:hover { background-color: #DC143C; border-color: #DC143C; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="breadcrumb"><a href="index.html">← Back to Home</a></p>
+        <h1>Saving Player Data (C++)</h1>
+        <p>This guide covers the C++ implementation for making persistent, player-centric systems (like inventory, skills, or stats) saveable. This process uses the <code>ICrimsonSaveableSystem</code> interface.</p>
+        <div class="note">
+            <p>This guide is for C++ programmers. For a Blueprint-only approach, <a href="saving-player-data-bp.html">see the Blueprint guide</a>.</p>
+        </div>
+
+        <h2>Step 1: Create Your Data Fragment</h2>
+        <p>First, create a new C++ class that inherits from <code>UCrimsonSaveGameFragmentBase</code>. This class will hold the data you want to save.</p>
+<pre><code>// MyInventorySaveFragment.h
+#pragma once
+#include "Fragments/CrimsonSaveGameFragmentBase.h"
+#include "MyInventorySaveFragment.generated.h"
+
+USTRUCT()
+struct FMySavedItem
+{
+    GENERATED_BODY()
+    // ... UPROPERTYs for item ID, quantity, etc.
+};
+
+UCLASS()
+class UMyInventorySaveFragment : public UCrimsonSaveGameFragmentBase
+{
+    GENERATED_BODY()
+public:
+    UPROPERTY(VisibleAnywhere, Category = "Save Data")
+    TArray&lt;FMySavedItem&gt; SavedItems;
+    
+    UPROPERTY(VisibleAnywhere, Category = "Save Data")
+    int32 SavedCurrency;
+};
+</code></pre>
+
+        <h2>Step 2: Implement the Interface</h2>
+        <p>In your live data class (e.g., <code>UPlayerInventoryComponent</code>, add the <code>ICrimsonSaveableSystem</code> interface.</p>
+<pre><code>// PlayerInventoryComponent.h
+#pragma once
+#include "ICrimsonSaveableSystem.h"
+#include "PlayerInventoryComponent.generated.h"
+
+UCLASS()
+class UPlayerInventoryComponent : public UActorComponent, public ICrimsonSaveableSystem
+{
+    GENERATED_BODY()
+    
+public:
+    // --- ICrimsonSaveableSystem Interface ---
+    virtual FString GetFragmentName_Implementation() const override;
+    virtual UCrimsonSaveGameFragmentBase* GatherSaveData_Implementation() override;
+    virtual void RestoreFromSaveData_Implementation(const UCrimsonSaveGameFragmentBase* Fragment) override;
+    // --- End Interface ---
+    
+private:
+    // Your live inventory data
+    TArray&lt;FMyLiveItem&gt; CurrentItems;
+    int32 CurrentCurrency;
+};
+</code></pre>
+
+        <h2>Step 3: Implement Interface Functions</h2>
+        <p>In your <code>.cpp</code> file, provide logic for the three interface functions.</p>
+<pre><code>// PlayerInventoryComponent.cpp
+#include "MyInventorySaveFragment.h"
+
+FString UPlayerInventoryComponent::GetFragmentName_Implementation() const
+{
+    // This MUST be a unique name!
+    return TEXT("PlayerInventory");
+}
+
+UCrimsonSaveGameFragmentBase* UPlayerInventoryComponent::GatherSaveData_Implementation()
+{
+    // Create a new fragment object
+    UMyInventorySaveFragment* Fragment = NewObject&lt;UMyInventorySaveFragment&gt;();
+    
+    // Copy live data into the fragment
+    Fragment->SavedCurrency = this->CurrentCurrency;
+    Fragment->SavedItems = this->CurrentItems;
+    
+    return Fragment;
+}
+
+void UPlayerInventoryComponent::RestoreFromSaveData_Implementation(const UCrimsonSaveGameFragmentBase* InFragment)
+{
+    // Cast the incoming fragment to our specific type
+    const UMyInventorySaveFragment* Fragment = Cast&lt;UMyInventorySaveFragment&gt;(InFragment);
+    if (!Fragment)
+    {
+        return; // Wrong fragment type, abort.
+    }
+
+    CurrentItems->Clear();
+    
+    // Apply saved data to our live properties
+    this->CurrentCurrency = Fragment->SavedCurrency;
+    this->CurrentItems = Fragment->SavedItems;
+    
+    // ... (Remember to update your UI!)
+   
+}
+</code></pre>
+
+        <h2>Step 4: Register Your System</h2>
+        <p>Finally, you must tell the <code>SaveGameManager</code> that your system exists. Do this in <code>BeginPlay</code> (or whenever your component is initialized).</p>
+<pre><code>// PlayerInventoryComponent.cpp
+#include "Core/CrimsonSaveGameManagerSubsystem.h"
+#include "Kismet/GameplayStatics.h"
+
+void UPlayerInventoryComponent::BeginPlay()
+{
+    Super::BeginPlay();
+    
+    if (UCrimsonSaveGameManagerSubsystem* SaveManager = UCrimsonSaveGameManagerSubsystem::Get(this))
+    {
+        SaveManager->RegisterSaveableSystem(this); // 'this' is the TScriptInterface
+    }
+}
+
+void UPlayerInventoryComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (UCrimsonSaveGameManagerSubsystem* SaveManager = UCrimsonSaveGameManagerSubsystem::Get(this))
+    {
+        SaveManager->UnregisterSaveableSystem(this);
+    }
+    Super::EndPlay(EndPlayReason);
+}
+</code></pre>
+
+        <div class="navigation-buttons">
+            <a href="core-concepts.html" class="nav-button">← Core Concepts</a>
+            <a href="saving-player-data-bp.html" class="nav-button">Saving Player Data (BP) →</a>
+        </div>
+    </div>
+</body>
+</html>
