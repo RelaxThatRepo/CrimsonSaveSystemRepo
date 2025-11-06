@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation - Crimson Save System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; line-height: 1.7; padding: 2em; margin: 0 auto; background-color: #121212; color: #e0e0e0; }
+        .container { max-width: 900px; margin: 0 auto; background-color: #1e1e1e; padding: 2em 3em; border-radius: 12px; border: 1px solid #333; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+        h1 { color: #DC143C; font-weight: 700; }
+        h2 { color: #f5f5f5; font-weight: 400; border-bottom: 1px solid #5e0a1b; padding-bottom: 0.5em; margin-top: 2em; }
+        p { color: #b3b3b3; }
+        .breadcrumb { margin-bottom: 2em; font-size: 0.9em; }
+        .breadcrumb a { color: #DC143C; font-weight: bold; }
+        code { background-color: #2c2c2c; padding: 0.2em 0.4em; border-radius: 4px; font-family: 'Courier New', Courier, monospace; }
+        pre { background-color: #2c2c2c; padding: 1em; border-radius: 8px; overflow-x: auto; }
+        li { margin-bottom: 0.75em; }
+        .note { background-color: #2c2c2c; border-left: 4px solid #DC143C; padding: 1em; margin: 1em 0; border-radius: 4px; }
+        .navigation-buttons { display: flex; justify-content: space-between; margin-top: 3em; border-top: 1px solid #333; padding-top: 1.5em; }
+        .nav-button { display: inline-block; padding: 10px 20px; background-color: #333; color: #e0e0e0; border-radius: 6px; text-decoration: none; font-weight: bold; border: 1px solid #444; transition: all 0.3s ease; }
+        .nav-button:hover { background-color: #DC143C; border-color: #DC143C; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="breadcrumb"><a href="index.html">← Back to Home</a></p>
+        <h1>Installation Guide</h1>
+        <p>There are two primary ways to install the Crimson Save System, depending on how you acquired it. Follow the method that matches your situation.</p>
+
+        <h2>Method 1: Epic Games Launcher (Marketplace)</h2>
+        <p>This is the standard method if you acquired the plugin from the Unreal Engine Marketplace. This method is compatible with both Blueprint-only and C++ projects.</p>
+        <ol>
+            <li>Open the <strong>Epic Games Launcher</strong>.</li>
+            <li>Navigate to your <strong>Library</strong> page.</li>
+            <li>Scroll down to your "Vault" section and find the <strong>Crimson Save System</strong> plugin.</li>
+            <li>Click the <strong>"Add to Project"</strong> button.</li>
+            <li>A new window will appear. Select the project you want to add the plugin to. Make sure the engine version is compatible.</li>
+            <li>Click "Add". The launcher will copy the plugin files into your project's <code>Plugins</code> folder.</li>
+            <li>Open your Unreal Engine project.</li>
+            <li>You should get a pop-up in the bottom-right corner: "New plugins are available." Click "Manage Plugins...".</li>
+            <li>If you don't see the pop-up, go to <strong>Edit > Plugins</strong> in the main toolbar.</li>
+            <li>Find "Crimson Save System" (it's likely under the "Project" or "Installed" category).</li>
+            <li>Check the <strong>"Enabled"</strong> box.</li>
+            <li>The editor will prompt you to restart. Click <strong>"Restart Now"</strong>.</li>
+        </ol>
+        <div class="note">
+            <p>If your project is C++ based, the editor may ask you to rebuild the project. This is normal. Close the editor, open your IDE (Visual Studio/Rider), and build the project. Then, re-open the editor.</p>
+        </div>
+
+        <h2>Method 2: Manual C++ (Source) Installation</h2>
+        <p>This method is for C++ projects when you have the plugin's source code (e.g., from GitHub or a direct download).</p>
+        <ol>
+            <li>Download the plugin source code, which is usually a <code>.zip</code> file.</li>
+            <li>Navigate to your project's root directory (the folder containing your <code>.uproject</code> file).</li>
+            <li>Create a new folder named <code>Plugins</code> if one does not already exist.</li>
+            <li>Unzip the plugin files. You should have a folder named <code>CrimsonSaveSystem</code> (or similar).</li>
+            <li>Move the entire <code>CrimsonSaveSystem</code> folder into the <code>Plugins</code> folder.</li>
+            <li>The final directory structure should look like this:</li>
+<pre><code>MyProject/
+├── Content/
+├── Source/
+├── Plugins/
+│   └── CrimsonSaveSystem/
+│       ├── Source/
+│       ├── Resources/
+│       └── CrimsonSaveSystem.uplugin
+└── MyProject.uproject
+</code></pre>
+            <li>Open your <code>.uproject</code> file in a text editor (like Notepad or VS Code). Find the <code>"Plugins"</code> array (or create it if it doesn't exist) and add the following entry. This ensures the project enables the plugin on load.</li>
+<pre><code>{
+    ...
+    "Plugins": [
+        {
+            "Name": "CrimsonSaveSystem",
+            "Enabled": true
+        }
+        // ... any other plugins you have
+    ]
+}
+</code></pre>
+            <li>Save and close the <code>.uproject</code> file.</li>
+            <li><strong>Close</strong> your Unreal Editor and IDE (Visual Studio, Rider) if they are open.</li>
+            <li>Right-click on your project's <code>.uproject</code> file and select <strong>"Generate Visual Studio project files"</strong>.</li>
+            <li>Once complete, open your project's <code>.sln</code> file in your IDE.</li>
+            <li>Build the project (e.g., press <code>Ctrl+Shift+B</code> in Visual Studio). This will compile the plugin's source code along with your game.</li>
+            <li>After the build succeeds, you can open your project in the Unreal Editor. The plugin will be enabled.</li>
+        </ol>
+        
+        <h2>Verification</h2>
+        <p>You can confirm the installation was successful in two ways:</p>
+        <ul>
+            <li>Go to <strong>Edit > Plugins</strong> and verify that "Crimson Save System" is listed and marked as "Enabled".</li>
+            <li>In a Blueprint, right-click and search for "Get Crimson Save Game Manager". If the node appears, the subsystem is loaded and ready.</li>
+        </ul>
+
+        <div class="navigation-buttons">
+            <a href="index.html" class="nav-button">← Back to Home</a>
+            <a href="core-concepts.html" class="nav-button">Core Concepts →</a>
+        </div>
+    </div>
+</body>
+</html>

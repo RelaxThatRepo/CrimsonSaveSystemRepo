@@ -87,18 +87,53 @@
         .topic-card a::after {
             content: ' →';
         }
+        .video-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #DC143C; /* Crimson Red */
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #DC143C;
+            transition: all 0.3s ease;
+            font-size: 1.1em; /* Make it a bit bigger */
+            text-align: center;
+        }
+        .video-button:hover {
+            background-color: #a00f2b; /* Darker red */
+            border-color: #a00f2b;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Crimson Save System</h1>
-        <p>Welcome to the documentation for the Crimson Save System, a modular, fragment-based save solution for Unreal Engine 5. This system is designed to be highly decoupled, allowing any number of game systems to register themselves as "saveable" without creating hard dependencies.</p>
+        <p>Welcome to the documentation for the Crimson Save System, a modular, fragment-based save solution for Unreal Engine 5. This system is designed to be highly decoupled, allowing any number of game. systems to register themselves as "saveable" without creating hard dependencies.</p>
         <p>It intelligently separates persistent player data (like inventory and skills) from level-specific world data (like open chests or destroyed objects).</p>
+
+        <p style="margin: 2em 0; text-align: center;">
+            <a href="https://youtu.be/IBxtbhvsaC0" target="_blank" rel="noopener noreferrer" class="video-button">
+                ▶️ Quick Start Guide
+            </a>
+        </p>
+
 
         <h2>Documentation Topics</h2>
         <p>Select a topic below to view detailed guides.</p>
         
         <ul class="topic-grid">
+            <li>
+                <div class="topic-card">
+                    <h3>Installation</h3>
+                    <p>How to add the plugin to your project, either from the Marketplace or from C++ source.</p>
+                    <a href="installation.html">View Guide</a>
+                </div>
+            </li>
             <li>
                 <div class="topic-card">
                     <h3>Core Concepts & Setup</h3>
@@ -123,7 +158,7 @@
             <li>
                 <div class="topic-card">
                     <h3>Saving World Data (C++)</h3>
-                    <p>The C++ implementation for saving the state of actors in your level (chests, doors) using <code>ICrimsonSaveableActor</code>.</p>
+                    <p>The C++ implementation for saving the state of actors in your level (chests, doors) using D>ICrimsonSaveableActor</code>.</p>
                     <a href="saving-world-data-cpp.html">View Guide</a>
                 </div>
             </li>
