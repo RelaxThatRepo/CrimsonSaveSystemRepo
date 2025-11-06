@@ -21,6 +21,26 @@
         .navigation-buttons { display: flex; justify-content: space-between; margin-top: 3em; border-top: 1px solid #333; padding-top: 1.5em; }
         .nav-button { display: inline-block; padding: 10px 20px; background-color: #333; color: #e0e0e0; border-radius: 6px; text-decoration: none; font-weight: bold; border: 1px solid #444; transition: all 0.3s ease; }
         .nav-button:hover { background-color: #DC143C; border-color: #DC143C; color: white; }
+        .video-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #DC143C; /* Crimson Red */
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            border: 1px solid #DC143C;
+            transition: all 0.3s ease;
+            font-size: 1.1em; /* Make it a bit bigger */
+            text-align: center;
+        }
+        .video-button:hover {
+            background-color: #a00f2b; /* Darker red */
+            border-color: #a00f2b;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -31,6 +51,12 @@
         <div class="note">
             <p>This guide is for Blueprints. For a C++ approach, <a href="saving-world-data-cpp.html">see the C++ guide</a>.</p>
         </div>
+
+        <p style="margin: 2em 0; text-align: center;">
+            <a href="https://youtu.be/edFbcMqJqZM" target="_blank" rel="noopener noreferrer" class="video-button">
+                ▶️ Saving World Data
+            </a>
+        </p>
 
         <h2>Step 1: Create Your Actor Data Struct (Optional)</h2>
         <p>The manager stores an <code>FInstancedStruct</code> payload for each actor. It's good practice to create a simple <strong>Struct</strong> Blueprint to hold this data.</p>
